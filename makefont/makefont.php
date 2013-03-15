@@ -195,63 +195,129 @@ function GetInfoFromType1($file, $embed, $map)
 
 function MakeFontDescriptor($info)
 {
-	// Ascent
-	$fd = "array('Ascent'=>".$info['Ascender'];
-	// Descent
-	$fd .= ",'Descent'=>".$info['Descender'];
-	// CapHeight
-	if(!empty($info['CapHeight']))
-		$fd .= ",'CapHeight'=>".$info['CapHeight'];
-	else
-		$fd .= ",'CapHeight'=>".$info['Ascender'];
-	// Flags
-	$flags = 0;
-	if($info['IsFixedPitch'])
-		$flags += 1<<0;
-	$flags += 1<<5;
-	if($info['ItalicAngle']!=0)
-		$flags += 1<<6;
-	$fd .= ",'Flags'=>".$flags;
-	// FontBBox
-	$fbb = $info['FontBBox'];
-	$fd .= ",'FontBBox'=>'[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]'";
-	// ItalicAngle
-	$fd .= ",'ItalicAngle'=>".$info['ItalicAngle'];
-	// StemV
-	if(isset($info['StdVW']))
-		$stemv = $info['StdVW'];
-	elseif($info['Bold'])
-		$stemv = 120;
-	else
-		$stemv = 70;
-	$fd .= ",'StemV'=>".$stemv;
-	// MissingWidth
-	$fd .= ",'MissingWidth'=>".$info['MissingWidth'].')';
+	global $gofontFilename;
+	$fd = "";
+	if( $gofontFilename == null ){
+		// Ascent
+		$fd = "array('Ascent'=>".$info['Ascender'];
+		// Descent
+		$fd .= ",'Descent'=>".$info['Descender'];
+		// CapHeight
+		if(!empty($info['CapHeight']))
+			$fd .= ",'CapHeight'=>".$info['CapHeight'];
+		else
+			$fd .= ",'CapHeight'=>".$info['Ascender'];
+		// Flags
+		$flags = 0;
+		if($info['IsFixedPitch'])
+			$flags += 1<<0;
+		$flags += 1<<5;
+		if($info['ItalicAngle']!=0)
+			$flags += 1<<6;
+		$fd .= ",'Flags'=>".$flags;
+		// FontBBox
+		$fbb = $info['FontBBox'];
+		$fd .= ",'FontBBox'=>'[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]'";
+		// ItalicAngle
+		$fd .= ",'ItalicAngle'=>".$info['ItalicAngle'];
+		// StemV
+		if(isset($info['StdVW']))
+			$stemv = $info['StdVW'];
+		elseif($info['Bold'])
+			$stemv = 120;
+		else
+			$stemv = 70;
+		$fd .= ",'StemV'=>".$stemv;
+		// MissingWidth
+		$fd .= ",'MissingWidth'=>".$info['MissingWidth'].')';
+	}else{
+		$fd = "\tme.desc = make([]FontDescItem,8)\n";
+		
+		// Ascent
+		$fd .= "\tme.desc[0] =  FontDescItem{ Key:\"Ascent\",Val : \"".$info['Ascender']."\" }\n";
+		
+		// Descent
+		$fd .= "\tme.desc[1] =  FontDescItem{ Key: \"Descent\", Val : \"".$info['Descender']."\" }\n";
+		
+		// CapHeight
+		if(!empty($info['CapHeight']))
+			$fd .= "\tme.desc[2] =  FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['CapHeight']."\" }\n";
+		else
+			$fd .= "\tme.desc[2] =  FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['Ascender']."\" }\n";
+		
+		// Flags
+		$flags = 0;
+		if($info['IsFixedPitch'])
+			$flags += 1<<0;
+		$flags += 1<<5;
+		if($info['ItalicAngle']!=0)
+			$flags += 1<<6;
+		$fd .= "\tme.desc[3] =  FontDescItem{ Key: \"Flags\", Val :  \"".$flags."\" }\n";
+		
+		// FontBBox
+		$fbb = $info['FontBBox'];
+		$fd .= "\tme.desc[4] =  FontDescItem{ Key:\"FontBBox\", Val :  \"[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]\" }\n";
+		
+		// ItalicAngle
+		$fd .= "\tme.desc[5] =  FontDescItem{ Key:\"ItalicAngle\", Val :  \"".$info['ItalicAngle']."\" }\n";
+		// StemV
+		if(isset($info['StdVW']))
+			$stemv = $info['StdVW'];
+		elseif($info['Bold'])
+			$stemv = 120;
+		else
+			$stemv = 70;
+		$fd .= "\tme.desc[6] =  FontDescItem{ Key:\"StemV\", Val :  \"".$stemv."\" }\n ";
+		
+		// MissingWidth
+		$fd .= "\tme.desc[7] =  FontDescItem{ Key:\"MissingWidth\", Val :  \"".$info['MissingWidth']."\" } \n ";
+	}
 	return $fd;
 }
 
 function MakeWidthArray($widths)
-{
-	$s = "array(\n\t";
-	for($c=0;$c<=255;$c++)
-	{
-		if(chr($c)=="'")
-			$s .= "'\\''";
-		elseif(chr($c)=="\\")
-			$s .= "'\\\\'";
-		elseif($c>=32 && $c<=126)
-			$s .= "'".chr($c)."'";
-		else
-			$s .= "chr($c)";
-		$s .= '=>'.$widths[$c];
-		if($c<255)
-			$s .= ',';
-		if(($c+1)%22==0)
-			$s .= "\n\t";
+{	global $gofontFilename;
+	$s = "";
+	if( $gofontFilename == null ){
+		$s = "array(\n\t";
+		for($c=0;$c<=255;$c++)
+		{
+			if(chr($c)=="'")
+				$s .= "'\\''";
+			elseif(chr($c)=="\\")
+				$s .= "'\\\\'";
+			elseif($c>=32 && $c<=126)
+				$s .= "'".chr($c)."'";
+			else
+				$s .= "chr($c)";
+			$s .= '=>'.$widths[$c];
+			if($c<255)
+				$s .= ',';
+			if(($c+1)%22==0)
+				$s .= "\n\t";
+		}
+		$s .= ')';
+	
+	}else{
+		$s = "\tme.cw = make(FontCw)\n";
+		for($c=0;$c<=255;$c++){
+			$s .= "\tme.cw[";
+			if(chr($c)=="\"")
+				$s .= 'ToByte("\"")';
+			elseif(chr($c)=="\\")
+				$s .= 'ToByte("\\\\")';
+			elseif($c>=32 && $c<=126)
+				$s .= "ToByte(\"".chr($c)."\")";
+			else
+				$s .= "Chr($c)";
+			$s .= "]=".  $widths[$c];
+			$s .= "\n";
+		}
 	}
-	$s .= ')';
 	return $s;
 }
+
+
 
 function MakeFontEncoding($map)
 {
@@ -274,7 +340,7 @@ function MakeFontEncoding($map)
 
 function SaveToFile($file, $s, $mode)
 {
-	$f = fopen($file, 'w'.$mode);
+	$f = fopen("outputfont/".$file, 'w'.$mode);
 	if(!$f)
 		Error('Can\'t write to file '.$file);
 	fwrite($f, $s, strlen($s));
@@ -283,34 +349,110 @@ function SaveToFile($file, $s, $mode)
 
 function MakeDefinitionFile($file, $type, $enc, $embed, $map, $info)
 {
-	$s = "<?php\n";
-	$s .= '$type = \''.$type."';\n";
-	$s .= '$name = \''.$info['FontName']."';\n";
-	$s .= '$desc = '.MakeFontDescriptor($info).";\n";
-	$s .= '$up = '.$info['UnderlinePosition'].";\n";
-	$s .= '$ut = '.$info['UnderlineThickness'].";\n";
-	$s .= '$cw = '.MakeWidthArray($info['Widths']).";\n";
-	$s .= '$enc = \''.$enc."';\n";
-	$diff = MakeFontEncoding($map);
-	if($diff)
-		$s .= '$diff = \''.$diff."';\n";
-	if($embed)
-	{
-		$s .= '$file = \''.$info['File']."';\n";
-		if($type=='Type1')
+	global $gofontFilename;
+	$s = "";
+    if( $gofontFilename == null ){
+		$s = "<?php\n";
+		$s .= '$type = \''.$type."';\n";
+		$s .= '$name = \''.$info['FontName']."';\n";
+		$s .= '$desc = '.MakeFontDescriptor($info).";\n";
+		$s .= '$up = '.$info['UnderlinePosition'].";\n";
+		$s .= '$ut = '.$info['UnderlineThickness'].";\n";
+		$s .= '$cw = '.MakeWidthArray($info['Widths']).";\n";
+		$s .= '$enc = \''.$enc."';\n";
+		$diff = MakeFontEncoding($map);
+		if($diff)
+			$s .= '$diff = \''.$diff."';\n";
+		if($embed)
 		{
-			$s .= '$size1 = '.$info['Size1'].";\n";
-			$s .= '$size2 = '.$info['Size2'].";\n";
+			$s .= '$file = \''.$info['File']."';\n";
+			if($type=='Type1')
+			{
+				$s .= '$size1 = '.$info['Size1'].";\n";
+				$s .= '$size2 = '.$info['Size2'].";\n";
+			}
+			else
+				$s .= '$originalsize = '.$info['OriginalSize'].";\n";
 		}
-		else
-			$s .= '$originalsize = '.$info['OriginalSize'].";\n";
+		$s .= "?>\n";
+	}else{
+		$s = "type ".$gofontFilename." struct {\n";
+		$s .= "\tfamily string\n";
+		$s .= "\tfonttype string\n";
+		$s .= "\tname string\n";
+		$s .= "\tdesc  []FontDescItem\n";
+		$s .= "\tup int\n";
+		$s .= "\tut int\n";
+		$s .= "\tcw FontCw\n";
+		$s .= "\tenc string\n";
+		$s .= "\tdiff string\n";
+		$s .= "}\n";
+		
+		$s .= "func (me * ".$gofontFilename.") Init(){\n";
+		$s .=	MakeWidthArray($info['Widths']);
+		$s .= "\tme.up = ".$info['UnderlinePosition']."\n";
+		$s .= "\tme.ut = ".$info['UnderlineThickness']."\n";
+		$s .= "\tme.fonttype = \"".$type."\"\n";
+		$s .= "\tme.name = \"".$info['FontName']."\"\n";
+		$s .= "\tme.enc = \"".$enc."\"\n";
+		$diff = MakeFontEncoding($map);
+		if($diff){
+			$s .= "\tme.diff = \"".$diff."\"\n";
+		}
+		$s .= MakeFontDescriptor($info);
+		$s .= "}\n";
+		
+		$s .= "func (me * ".$gofontFilename.")GetType() string{\n";
+		$s .= "\treturn me.fonttype\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetName() string{\n";
+		$s .= "\treturn me.name\n";
+		$s .= "}	\n";
+		$s .= "func (me * ".$gofontFilename.")GetDesc() []FontDescItem{\n";
+		$s .= "\treturn me.desc\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetUp() int{\n";
+		$s .= "\treturn me.up\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetUt()  int{\n";
+		$s .= "\treturn me.ut\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetCw() FontCw{\n";
+		$s .= "\treturn me.cw\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetEnc() string{\n";
+		$s .= "\treturn me.enc\n";
+		$s .= "}\n";
+		$s .= "func (me * ".$gofontFilename.")GetDiff() string {\n";
+		$s .= "\treturn me.diff\n";
+		$s .= "}\n";
+
+		$s .= "func (me * ".$gofontFilename.") GetOriginalsize() int{\n";
+		$s .= "\treturn 98764\n";
+		$s .= "}\n";
+
+		$s .= "func (me * ".$gofontFilename.")  SetFamily(family string){\n";
+		$s .= "\tme.family = family\n";
+		$s .= "}\n";
+
+		$s .= "func (me * ".$gofontFilename.") 	GetFamily() string{\n";
+		$s .= "\treturn me.family\n";
+		$s .= "}\n";
 	}
-	$s .= "?>\n";
 	SaveToFile($file, $s, 't');
+}
+
+$gofontFilename = null;
+function MakeGoFont($name,$fontfile, $enc='cp1252', $embed=true){
+	global $gofontFilename;
+	$gofontFilename = $name;
+	MakeFont($fontfile, $enc, $embed);
+	$gofontFilename = null;
 }
 
 function MakeFont($fontfile, $enc='cp1252', $embed=true)
 {
+	global $gofontFilename;
 	// Generate a font definition file
 	if(get_magic_quotes_runtime())
 		@set_magic_quotes_runtime(0);
@@ -349,9 +491,15 @@ function MakeFont($fontfile, $enc='cp1252', $embed=true)
 			Notice('Font file could not be compressed (zlib extension not available)');
 		}
 	}
-
-	MakeDefinitionFile($basename.'.php', $type, $enc, $embed, $map, $info);
-	Message('Font definition file generated: '.$basename.'.php');
+	
+	if( $gofontFilename == null ){
+		MakeDefinitionFile($basename.'.php', $type, $enc, $embed, $map, $info);
+		Message('Font definition file generated: '.$basename.'.php');
+	}else{
+		MakeDefinitionFile($basename.'.go', $type, $enc, $embed, $map, $info);
+		Message('Font definition file generated: '.$basename.'.go');
+	}
+	
 }
 
 if(PHP_SAPI=='cli')
