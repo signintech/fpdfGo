@@ -4,8 +4,6 @@ fpdfGo
 This is a fork of [FPDF](http://www.fpdf.org/) Library for generate font file to use with gopdf
 
 
-------
-
 fork มาจาก FPDF เพื่อสำหรับ makefont ให้กับ gopdf
 
 
