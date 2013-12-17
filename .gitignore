@@ -3,7 +3,7 @@
 *.a
 *.so
 *~
-
+/ttf
 # Folders
 _obj
 _test

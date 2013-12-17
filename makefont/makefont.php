@@ -231,19 +231,19 @@ function MakeFontDescriptor($info)
 		// MissingWidth
 		$fd .= ",'MissingWidth'=>".$info['MissingWidth'].')';
 	}else{
-		$fd = "\tme.desc = make([]FontDescItem,8)\n";
+		$fd = "\tme.desc = make([]gopdf.FontDescItem,8)\n";
 		
 		// Ascent
-		$fd .= "\tme.desc[0] =  FontDescItem{ Key:\"Ascent\",Val : \"".$info['Ascender']."\" }\n";
+		$fd .= "\tme.desc[0] =  gopdf.FontDescItem{ Key:\"Ascent\",Val : \"".$info['Ascender']."\" }\n";
 		
 		// Descent
-		$fd .= "\tme.desc[1] =  FontDescItem{ Key: \"Descent\", Val : \"".$info['Descender']."\" }\n";
+		$fd .= "\tme.desc[1] =  gopdf.FontDescItem{ Key: \"Descent\", Val : \"".$info['Descender']."\" }\n";
 		
 		// CapHeight
 		if(!empty($info['CapHeight']))
-			$fd .= "\tme.desc[2] =  FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['CapHeight']."\" }\n";
+			$fd .= "\tme.desc[2] =  gopdf.FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['CapHeight']."\" }\n";
 		else
-			$fd .= "\tme.desc[2] =  FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['Ascender']."\" }\n";
+			$fd .= "\tme.desc[2] =  gopdf.FontDescItem{ Key:\"CapHeight\", Val :  \"".$info['Ascender']."\" }\n";
 		
 		// Flags
 		$flags = 0;
@@ -252,14 +252,14 @@ function MakeFontDescriptor($info)
 		$flags += 1<<5;
 		if($info['ItalicAngle']!=0)
 			$flags += 1<<6;
-		$fd .= "\tme.desc[3] =  FontDescItem{ Key: \"Flags\", Val :  \"".$flags."\" }\n";
+		$fd .= "\tme.desc[3] =  gopdf.FontDescItem{ Key: \"Flags\", Val :  \"".$flags."\" }\n";
 		
 		// FontBBox
 		$fbb = $info['FontBBox'];
-		$fd .= "\tme.desc[4] =  FontDescItem{ Key:\"FontBBox\", Val :  \"[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]\" }\n";
+		$fd .= "\tme.desc[4] =  gopdf.FontDescItem{ Key:\"FontBBox\", Val :  \"[".$fbb[0].' '.$fbb[1].' '.$fbb[2].' '.$fbb[3]."]\" }\n";
 		
 		// ItalicAngle
-		$fd .= "\tme.desc[5] =  FontDescItem{ Key:\"ItalicAngle\", Val :  \"".$info['ItalicAngle']."\" }\n";
+		$fd .= "\tme.desc[5] =  gopdf.FontDescItem{ Key:\"ItalicAngle\", Val :  \"".$info['ItalicAngle']."\" }\n";
 		// StemV
 		if(isset($info['StdVW']))
 			$stemv = $info['StdVW'];
@@ -267,10 +267,10 @@ function MakeFontDescriptor($info)
 			$stemv = 120;
 		else
 			$stemv = 70;
-		$fd .= "\tme.desc[6] =  FontDescItem{ Key:\"StemV\", Val :  \"".$stemv."\" }\n ";
+		$fd .= "\tme.desc[6] =  gopdf.FontDescItem{ Key:\"StemV\", Val :  \"".$stemv."\" }\n ";
 		
 		// MissingWidth
-		$fd .= "\tme.desc[7] =  FontDescItem{ Key:\"MissingWidth\", Val :  \"".$info['MissingWidth']."\" } \n ";
+		$fd .= "\tme.desc[7] =  gopdf.FontDescItem{ Key:\"MissingWidth\", Val :  \"".$info['MissingWidth']."\" } \n ";
 	}
 	return $fd;
 }
@@ -299,17 +299,17 @@ function MakeWidthArray($widths)
 		$s .= ')';
 	
 	}else{
-		$s = "\tme.cw = make(FontCw)\n";
+		$s = "\tme.cw = make(gopdf.FontCw)\n";
 		for($c=0;$c<=255;$c++){
 			$s .= "\tme.cw[";
 			if(chr($c)=="\"")
-				$s .= 'ToByte("\"")';
+				$s .= 'gopdf.ToByte("\"")';
 			elseif(chr($c)=="\\")
-				$s .= 'ToByte("\\\\")';
+				$s .= 'gopdf.ToByte("\\\\")';
 			elseif($c>=32 && $c<=126)
-				$s .= "ToByte(\"".chr($c)."\")";
+				$s .= "gopdf.ToByte(\"".chr($c)."\")";
 			else
-				$s .= "Chr($c)";
+				$s .= "gopdf.Chr($c)";
 			$s .= "]=".  $widths[$c];
 			$s .= "\n";
 		}
@@ -376,20 +376,25 @@ function MakeDefinitionFile($file, $type, $enc, $embed, $map, $info)
 		}
 		$s .= "?>\n";
 	}else{
-		$s = "type ".$gofontFilename." struct {\n";
+		$s  = "";
+		$s .= "package fonts\n";
+		$s .= "import (\n";
+		$s .= "	\"github.com/signintech/gopdf\"\n";
+		$s .= ")\n";
+		$s .= "type ".$gofontFilename." struct {\n";
 		$s .= "\tfamily string\n";
 		$s .= "\tfonttype string\n";
 		$s .= "\tname string\n";
-		$s .= "\tdesc  []FontDescItem\n";
+		$s .= "\tdesc  []gopdf.FontDescItem\n";
 		$s .= "\tup int\n";
 		$s .= "\tut int\n";
-		$s .= "\tcw FontCw\n";
+		$s .= "\tcw gopdf.FontCw\n";
 		$s .= "\tenc string\n";
 		$s .= "\tdiff string\n";
 		$s .= "}\n";
 		
 		$s .= "func (me * ".$gofontFilename.") Init(){\n";
-		$s .=	MakeWidthArray($info['Widths']);
+		$s .=	 MakeWidthArray($info['Widths']);
 		$s .= "\tme.up = ".$info['UnderlinePosition']."\n";
 		$s .= "\tme.ut = ".$info['UnderlineThickness']."\n";
 		$s .= "\tme.fonttype = \"".$type."\"\n";
@@ -408,7 +413,7 @@ function MakeDefinitionFile($file, $type, $enc, $embed, $map, $info)
 		$s .= "func (me * ".$gofontFilename.")GetName() string{\n";
 		$s .= "\treturn me.name\n";
 		$s .= "}	\n";
-		$s .= "func (me * ".$gofontFilename.")GetDesc() []FontDescItem{\n";
+		$s .= "func (me * ".$gofontFilename.")GetDesc() []gopdf.FontDescItem{\n";
 		$s .= "\treturn me.desc\n";
 		$s .= "}\n";
 		$s .= "func (me * ".$gofontFilename.")GetUp() int{\n";
@@ -417,7 +422,7 @@ function MakeDefinitionFile($file, $type, $enc, $embed, $map, $info)
 		$s .= "func (me * ".$gofontFilename.")GetUt()  int{\n";
 		$s .= "\treturn me.ut\n";
 		$s .= "}\n";
-		$s .= "func (me * ".$gofontFilename.")GetCw() FontCw{\n";
+		$s .= "func (me * ".$gofontFilename.")GetCw() gopdf.FontCw{\n";
 		$s .= "\treturn me.cw\n";
 		$s .= "}\n";
 		$s .= "func (me * ".$gofontFilename.")GetEnc() string{\n";
@@ -476,11 +481,12 @@ function MakeFont($fontfile, $enc='cp1252', $embed=true)
 		$info = GetInfoFromType1($fontfile, $embed, $map);
 
 	$basename = substr(basename($fontfile), 0, -4);
+	$exportfilename = str_replace(" ", "_", $basename);
 	if($embed)
 	{
 		if(function_exists('gzcompress'))
 		{
-			$file = $basename.'.z';
+			$file = $exportfilename.'.z';
 			SaveToFile($file, gzcompress($info['Data']), 'b');
 			$info['File'] = $file;
 			Message('Font file compressed: '.$file);
@@ -496,8 +502,8 @@ function MakeFont($fontfile, $enc='cp1252', $embed=true)
 		MakeDefinitionFile($basename.'.php', $type, $enc, $embed, $map, $info);
 		Message('Font definition file generated: '.$basename.'.php');
 	}else{
-		MakeDefinitionFile($basename.'.go', $type, $enc, $embed, $map, $info);
-		Message('Font definition file generated: '.$basename.'.go');
+		MakeDefinitionFile($exportfilename.'.font.go', $type, $enc, $embed, $map, $info);
+		Message('Font definition file generated: '.$exportfilename.'.font.go');
 	}
 	
 }
