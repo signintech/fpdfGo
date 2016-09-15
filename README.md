@@ -1,3 +1,6 @@
+fpdfGo is deprecated no longer required by gopdf!
+====
+
 fpdfGo
 ======
 
